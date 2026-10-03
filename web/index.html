@@ -19,14 +19,18 @@
       <div id="summary" class="summary"></div>
       <fieldset>
         <legend>Format</legend>
-        <label><input type="radio" name="format" value="mp4" checked> Vidéo MP4</label>
-        <label><input type="radio" name="format" value="mp3"> Audio MP3<span id="mp3-size"></span></label>
+        <div class="segmented">
+          <label><input type="radio" name="format" value="mp4" checked> Vidéo MP4</label>
+          <label><input type="radio" name="format" value="mp3"> Audio MP3<span id="mp3-size"></span></label>
+        </div>
       </fieldset>
       <label id="quality-row">Qualité <select id="height"></select></label>
       <fieldset id="mode-row" hidden>
         <legend>Playlist</legend>
-        <label><input type="radio" name="mode" value="zip" checked> ZIP, un fichier par vidéo</label>
-        <label><input type="radio" name="mode" value="concat"> Un seul fichier, tout bout à bout (chapitres)</label>
+        <div class="segmented">
+          <label><input type="radio" name="mode" value="zip" checked> ZIP, un fichier par vidéo</label>
+          <label><input type="radio" name="mode" value="concat"> Un seul fichier, bout à bout</label>
+        </div>
       </fieldset>
       <div class="actions"><button type="submit">Télécharger</button></div>
     </form>

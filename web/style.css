@@ -1,181 +1,192 @@
-/* Glassmorphisme : cartes en verre dépoli sur un fond nuit traversé de taches de couleur.
-   Thème sombre seulement : le verre ne rend rien sur un fond clair. */
+/* Néomorphisme : tout est taillé dans la même matière grise, en relief (lumière en
+   haut à gauche, ombre en bas à droite) ou en creux ; le bleu marque l'actif. */
 :root {
-  color-scheme: dark;
-  --text: #f4f4f8;
-  --muted: rgba(244, 244, 248, 0.66);
-  --glass: rgba(255, 255, 255, 0.09);
-  --glass-hover: rgba(255, 255, 255, 0.14);
-  --border: rgba(255, 255, 255, 0.18);
-  --accent: #ff3b5c;
-  --accent-gradient: linear-gradient(135deg, #ff3b5c, #ff6fa8);
-  --error: #ff8a8a;
-  --ok: rgba(90, 220, 170, 0.55);
-  --radius: 18px;
-  --blur: blur(18px) saturate(140%);
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  color-scheme: light;
+  --bg: #e4e7eb;
+  --light: #ffffff;
+  --dark: #c2c8d0;
+  --text: #4a4f57;
+  --muted: #8b919a;
+  --accent: #5a8fca;
+  --accent-hover: #6a9bd3;
+  --error: #c2504a;
+  --raised: 9px 9px 18px var(--dark), -9px -9px 18px var(--light);
+  --raised-sm: 5px 5px 10px var(--dark), -5px -5px 10px var(--light);
+  --inset: inset 5px 5px 10px var(--dark), inset -5px -5px 10px var(--light);
+  --inset-sm: inset 3px 3px 6px var(--dark), inset -3px -3px 6px var(--light);
+  --pressed: inset 3px 3px 7px rgba(0, 0, 0, 0.22);
 }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
-/* Fond sur body seul : il remonte au canevas, et les taches (z-index -1) passent devant. */
 body {
   margin: 0;
   min-height: 100vh;
+  background: var(--bg);
   color: var(--text);
   font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: linear-gradient(160deg, #0b1030 0%, #1a1240 55%, #2a0f3d 100%) fixed;
 }
-
-/* Ce qu'on voit à travers le verre. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(40vmax 40vmax at 12% 18%, rgba(255, 59, 92, 0.45), transparent 70%),
-    radial-gradient(38vmax 38vmax at 88% 12%, rgba(140, 82, 255, 0.45), transparent 70%),
-    radial-gradient(42vmax 42vmax at 70% 92%, rgba(0, 200, 255, 0.30), transparent 70%);
-}
-
-main { max-width: 640px; margin: 0 auto; padding: 16px; }
-
-h1 {
-  font-size: 1.6rem;
-  margin: 12px 0 18px;
-  letter-spacing: 0.02em;
-  background: linear-gradient(90deg, #ff6f86, #ffb36b);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-h2 { font-size: 1.1rem; margin: 28px 0 8px; }
-
-/* ---- Verre ---------------------------------------------------------- */
-#options, .job, .banner, input[type="url"], select, button.secondary {
-  -webkit-backdrop-filter: var(--blur);
-  backdrop-filter: var(--blur);
-}
-
-#options, .job {
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 16px;
-  margin-top: 14px;
-}
-.job.ready { border-color: var(--ok); }
-.job.error { border-color: rgba(255, 110, 110, 0.55); }
-.job.cancelled { opacity: 0.7; }
+main { max-width: 640px; margin: 0 auto; padding: 20px 18px 40px; }
+h1 { font-size: 1.6rem; font-weight: 700; margin: 8px 0 22px; letter-spacing: 0.02em; }
+h2 { font-size: 1.1rem; margin: 34px 0 4px; }
 
 .banner {
-  background: rgba(255, 70, 90, 0.25);
-  border-bottom: 1px solid rgba(255, 120, 130, 0.45);
-  color: #fff;
-  padding: 10px 16px;
+  position: relative;
+  z-index: 1;
+  padding: 12px 16px;
   text-align: center;
   font-weight: 600;
+  color: var(--error);
+  background: var(--bg);
+  box-shadow: 0 6px 14px var(--dark);
 }
 
-/* ---- Champs et boutons ---------------------------------------------- */
-#analyze { display: flex; gap: 8px; }
+/* ---- Relief et creux ------------------------------------------------ */
+#options, .job {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--bg);
+  border-radius: 26px;
+  box-shadow: var(--raised);
+}
+.job.cancelled { opacity: 0.65; }
 
-/* 16 px minimum : en dessous, iOS zoome sur le champ. */
+#analyze { display: flex; gap: 14px; align-items: center; }
+
+/* Champ en creux. 16 px minimum : en dessous, iOS zoome sur le champ. */
 input[type="url"] {
   flex: 1;
   min-width: 0;
-  padding: 12px 14px;
+  padding: 14px 20px;
   font-size: 16px;
   color: var(--text);
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  background: var(--bg);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: var(--inset);
   outline: none;
 }
 input[type="url"]::placeholder { color: var(--muted); }
-input[type="url"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 59, 92, 0.35); }
+input[type="url"]:focus { box-shadow: var(--inset), 0 0 0 2px var(--accent); }
 
+/* Bouton principal : la pilule bleue en relief. */
 button, .button {
   display: inline-block;
-  padding: 12px 18px;
+  padding: 12px 22px;
   font-size: 16px;
   font-weight: 600;
   color: #fff;
   text-decoration: none;
-  background: var(--accent-gradient);
+  background: var(--accent);
   border: 0;
-  border-radius: 14px;
-  box-shadow: 0 6px 20px rgba(255, 59, 92, 0.35);
+  border-radius: 999px;
+  box-shadow: var(--raised-sm);
   cursor: pointer;
-  transition: filter 0.15s, transform 0.1s;
+  transition: background 0.15s, box-shadow 0.15s;
 }
-button:hover, .button:hover { filter: brightness(1.08); }
-button:active, .button:active { transform: scale(0.98); }
+button:hover, .button:hover { background: var(--accent-hover); }
+button:active, .button:active { box-shadow: var(--pressed); }
 button:disabled { opacity: 0.6; cursor: default; }
+button:focus-visible, .button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
+/* Bouton secondaire : même matière que le fond, qui s'enfonce au clic. */
 button.secondary {
   font-weight: 500;
   color: var(--text);
-  background: var(--glass);
-  border: 1px solid var(--border);
-  box-shadow: none;
+  background: var(--bg);
 }
-button.secondary:hover { background: var(--glass-hover); filter: none; }
+button.secondary:hover { color: var(--accent); }
+button.secondary:active { box-shadow: var(--inset-sm); }
 
-fieldset { border: 0; padding: 0; margin: 14px 0; }
-legend, #quality-row { font-weight: 600; }
-fieldset label { display: block; padding: 6px 0; font-weight: 400; }
-input[type="radio"] { accent-color: var(--accent); }
+/* ---- Choix ---------------------------------------------------------- */
+fieldset { border: 0; padding: 0; margin: 18px 0; min-width: 0; }
+legend { padding: 0; margin-bottom: 10px; font-weight: 600; }
 
+/* Sélecteur segmenté : une gouttière en creux, l'option choisie en relief bleu. */
+.segmented {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 22px;
+  box-shadow: var(--inset);
+}
+.segmented label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--muted);
+  border-radius: 17px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.segmented label:hover { color: var(--text); }
+/* Bouton radio retiré de l'affichage mais toujours au clavier et au lecteur d'écran. */
+.segmented input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.segmented label:has(input:checked) { color: #fff; background: var(--accent); box-shadow: var(--raised-sm); }
+.segmented label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+#quality-row { display: flex; align-items: center; gap: 12px; font-weight: 600; margin: 18px 0 6px; }
 select {
-  margin-left: 8px;
-  padding: 8px 10px;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 10px 42px 10px 18px;
   font-size: 16px;
   color: var(--text);
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%234a4f57' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center / 14px;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: var(--raised-sm);
+  cursor: pointer;
 }
+select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 /* ---- Contenu -------------------------------------------------------- */
-.summary img { width: 100%; border-radius: 12px; }
-.entries { max-height: 200px; overflow: auto; padding-left: 1.4em; color: var(--muted); }
+.summary img { display: block; width: 100%; border-radius: 18px; box-shadow: var(--raised-sm); margin-bottom: 12px; }
+.entries {
+  max-height: 200px;
+  overflow: auto;
+  margin: 10px 0 0;
+  padding: 12px 14px 12px 2.2em;
+  color: var(--muted);
+  border-radius: 18px;
+  box-shadow: var(--inset-sm);
+}
 .title { font-weight: 600; margin: 4px 0; overflow-wrap: anywhere; }
 .muted { color: var(--muted); margin: 4px 0; font-size: 0.92rem; }
 /* p.error et pas .error : « error » est aussi la classe d'état d'une carte de tâche. */
-p.error { color: var(--error); }
+p.error { color: var(--error); font-weight: 500; }
 .jobs { list-style: none; padding: 0; margin: 0; }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
+summary { cursor: pointer; color: var(--muted); }
 pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-size: 0.85rem;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  box-shadow: var(--inset-sm);
 }
 
+/* Barre de progression : gouttière en creux, remplissage bleu. */
 progress {
   -webkit-appearance: none;
   appearance: none;
+  display: block;
   width: 100%;
-  height: 8px;
-  margin: 8px 0 2px;
+  height: 14px;
+  margin: 12px 0 6px;
+  padding: 3px;
   border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  overflow: hidden;
+  background: var(--bg);
+  box-shadow: var(--inset-sm);
 }
-progress::-webkit-progress-bar { background: rgba(255, 255, 255, 0.12); border-radius: 999px; }
-progress::-webkit-progress-value { background: var(--accent-gradient); border-radius: 999px; }
-progress::-moz-progress-bar { background: var(--accent-gradient); border-radius: 999px; }
-
-/* Sans flou d'arrière-plan, du verre transparent serait illisible : on l'opacifie. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  #options, .job, input[type="url"], select, button.secondary { background: rgba(30, 26, 60, 0.92); }
-  .banner { background: rgba(120, 30, 50, 0.95); }
-}
+progress::-webkit-progress-bar { background: transparent; border-radius: 999px; }
+progress::-webkit-progress-value { background: var(--accent); border-radius: 999px; }
+progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
