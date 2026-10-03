@@ -1,50 +1,181 @@
+/* Glassmorphisme : cartes en verre dépoli sur un fond nuit traversé de taches de couleur.
+   Thème sombre seulement : le verre ne rend rien sur un fond clair. */
 :root {
-  color-scheme: light dark;
-  --bg: #f6f6f4;
-  --card: #ffffff;
-  --text: #1c1c1c;
-  --muted: #6b6b6b;
-  --accent: #c4302b;
-  --border: #e2e2de;
-  --error: #b3261e;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #141414;
-    --card: #1f1f1f;
-    --text: #ececec;
-    --muted: #9a9a9a;
-    --accent: #ff5c52;
-    --border: #2e2e2e;
-    --error: #ff8a80;
-  }
+  color-scheme: dark;
+  --text: #f4f4f8;
+  --muted: rgba(244, 244, 248, 0.66);
+  --glass: rgba(255, 255, 255, 0.09);
+  --glass-hover: rgba(255, 255, 255, 0.14);
+  --border: rgba(255, 255, 255, 0.18);
+  --accent: #ff3b5c;
+  --accent-gradient: linear-gradient(135deg, #ff3b5c, #ff6fa8);
+  --error: #ff8a8a;
+  --ok: rgba(90, 220, 170, 0.55);
+  --radius: 18px;
+  --blur: blur(18px) saturate(140%);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+
+/* Fond sur body seul : il remonte au canevas, et les taches (z-index -1) passent devant. */
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: linear-gradient(160deg, #0b1030 0%, #1a1240 55%, #2a0f3d 100%) fixed;
+}
+
+/* Ce qu'on voit à travers le verre. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40vmax 40vmax at 12% 18%, rgba(255, 59, 92, 0.45), transparent 70%),
+    radial-gradient(38vmax 38vmax at 88% 12%, rgba(140, 82, 255, 0.45), transparent 70%),
+    radial-gradient(42vmax 42vmax at 70% 92%, rgba(0, 200, 255, 0.30), transparent 70%);
+}
+
 main { max-width: 640px; margin: 0 auto; padding: 16px; }
-h1 { font-size: 1.4rem; margin: 8px 0 16px; }
-h2 { font-size: 1.1rem; margin: 24px 0 8px; }
-.banner { background: var(--error); color: #fff; padding: 10px 16px; text-align: center; font-weight: 600; }
+
+h1 {
+  font-size: 1.6rem;
+  margin: 12px 0 18px;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, #ff6f86, #ffb36b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+h2 { font-size: 1.1rem; margin: 28px 0 8px; }
+
+/* ---- Verre ---------------------------------------------------------- */
+#options, .job, .banner, input[type="url"], select, button.secondary {
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+}
+
+#options, .job {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-top: 14px;
+}
+.job.ready { border-color: var(--ok); }
+.job.error { border-color: rgba(255, 110, 110, 0.55); }
+.job.cancelled { opacity: 0.7; }
+
+.banner {
+  background: rgba(255, 70, 90, 0.25);
+  border-bottom: 1px solid rgba(255, 120, 130, 0.45);
+  color: #fff;
+  padding: 10px 16px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ---- Champs et boutons ---------------------------------------------- */
 #analyze { display: flex; gap: 8px; }
+
 /* 16 px minimum : en dessous, iOS zoome sur le champ. */
-input[type="url"] { flex: 1; min-width: 0; padding: 12px; font-size: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); }
-button, .button { display: inline-block; padding: 12px 16px; font-size: 16px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; text-decoration: none; cursor: pointer; }
-button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
-button:disabled { opacity: 0.6; }
-#options, .job { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 12px; }
-fieldset { border: 0; padding: 0; margin: 12px 0; }
+input[type="url"] {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  outline: none;
+}
+input[type="url"]::placeholder { color: var(--muted); }
+input[type="url"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 59, 92, 0.35); }
+
+button, .button {
+  display: inline-block;
+  padding: 12px 18px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: var(--accent-gradient);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(255, 59, 92, 0.35);
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+button:hover, .button:hover { filter: brightness(1.08); }
+button:active, .button:active { transform: scale(0.98); }
+button:disabled { opacity: 0.6; cursor: default; }
+
+button.secondary {
+  font-weight: 500;
+  color: var(--text);
+  background: var(--glass);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+button.secondary:hover { background: var(--glass-hover); filter: none; }
+
+fieldset { border: 0; padding: 0; margin: 14px 0; }
 legend, #quality-row { font-weight: 600; }
 fieldset label { display: block; padding: 6px 0; font-weight: 400; }
-select { margin-left: 8px; padding: 8px; font-size: 16px; }
-.summary img { width: 100%; border-radius: 8px; }
+input[type="radio"] { accent-color: var(--accent); }
+
+select {
+  margin-left: 8px;
+  padding: 8px 10px;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+/* ---- Contenu -------------------------------------------------------- */
+.summary img { width: 100%; border-radius: 12px; }
 .entries { max-height: 200px; overflow: auto; padding-left: 1.4em; color: var(--muted); }
 .title { font-weight: 600; margin: 4px 0; overflow-wrap: anywhere; }
 .muted { color: var(--muted); margin: 4px 0; font-size: 0.92rem; }
-.error { color: var(--error); }
+/* p.error et pas .error : « error » est aussi la classe d'état d'une carte de tâche. */
+p.error { color: var(--error); }
 .jobs { list-style: none; padding: 0; margin: 0; }
-progress { width: 100%; height: 10px; }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.85rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+}
+
+progress {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  margin: 8px 0 2px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+progress::-webkit-progress-bar { background: rgba(255, 255, 255, 0.12); border-radius: 999px; }
+progress::-webkit-progress-value { background: var(--accent-gradient); border-radius: 999px; }
+progress::-moz-progress-bar { background: var(--accent-gradient); border-radius: 999px; }
+
+/* Sans flou d'arrière-plan, du verre transparent serait illisible : on l'opacifie. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #options, .job, input[type="url"], select, button.secondary { background: rgba(30, 26, 60, 0.92); }
+  .banner { background: rgba(120, 30, 50, 0.95); }
+}
