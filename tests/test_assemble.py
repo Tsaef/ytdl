@@ -9,6 +9,41 @@ from ytdl import assemble
 from ytdl.assemble import Media
 from ytdl.errors import Cancelled
 
+import json
+import os
+import subprocess
+import time
+
+from ytdl.errors import JobError
+
+HAVE_FFMPEG = bool(shutil.which("ffmpeg") and shutil.which("ffprobe"))
+if not HAVE_FFMPEG and os.environ.get("YTDL_REQUIRE_FFMPEG") == "1":
+    raise RuntimeError("YTDL_REQUIRE_FFMPEG=1 mais ffmpeg ou ffprobe est introuvable")
+
+
+def make_clip(path, width=320, height=180, fps=30, seconds=1, audio=True, vcodec="libx264"):
+    args = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+            "-f", "lavfi", "-i", f"testsrc2=size={width}x{height}:rate={fps}:duration={seconds}"]
+    if audio:
+        # sine est mono : -ac 2 pour ressembler à une vraie vidéo (stéréo).
+        args += ["-f", "lavfi", "-i", f"sine=frequency=440:sample_rate=44100:duration={seconds}",
+                 "-c:a", "aac", "-ac", "2"]
+    args += ["-c:v", vcodec, "-pix_fmt", "yuv420p", str(path)]
+    subprocess.run(args, check=True)
+
+
+def make_audio(path, seconds=1):
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi",
+                    "-i", f"sine=frequency=440:sample_rate=48000:duration={seconds}",
+                    "-c:a", "aac", "-ac", "2", str(path)],
+                   check=True)
+
+
+def chapter_titles(path):
+    out = subprocess.run(["ffprobe", "-v", "error", "-show_chapters", "-of", "json", str(path)],
+                         capture_output=True, text=True, check=True)
+    return [c["tags"]["title"] for c in json.loads(out.stdout)["chapters"]]
+
 H264 = ("h264", 1920, 1080, "30/1")
 AAC = ("aac", "44100", 2)
 
@@ -70,6 +105,85 @@ class ZipTest(unittest.TestCase):
         with self.assertRaises(Cancelled):
             assemble.zip_files([(self.a, "01 - A.mp4")], self.tmp / "pl.zip", cancel)
         self.assertTrue(self.a.exists())
+
+
+@unittest.skipUnless(HAVE_FFMPEG, "ffmpeg absent")
+class FfmpegTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+
+    def test_probe(self):
+        make_clip(self.tmp / "a.mp4")
+        media = assemble.probe(self.tmp / "a.mp4")
+        self.assertAlmostEqual(media.duration, 1.0, delta=0.1)
+        self.assertEqual(media.video, ("h264", 320, 180, "30/1"))
+        self.assertEqual(media.audio, ("aac", "44100", 2))
+
+    def test_to_mp3_uses_fixed_settings(self):
+        make_audio(self.tmp / "a.m4a")
+        assemble.to_mp3(self.tmp / "a.m4a", self.tmp / "a.mp3")
+        media = assemble.probe(self.tmp / "a.mp3")
+        self.assertIsNone(media.video)
+        self.assertEqual(media.audio, ("mp3", "44100", 2))
+
+    def test_concat_copy_mp4_with_chapters(self):
+        files = [self.tmp / "001.mp4", self.tmp / "002.mp4"]
+        for f in files:
+            make_clip(f)
+        out = self.tmp / "pl.mp4"
+        assemble.concat_copy(files, ["Un", "Deux"], [1.0, 1.0], out)
+        self.assertAlmostEqual(assemble.probe(out).duration, 2.0, delta=0.15)
+        self.assertEqual(chapter_titles(out), ["Un", "Deux"])
+        self.assertEqual(sorted(p.name for p in self.tmp.iterdir()), ["001.mp4", "002.mp4", "pl.mp4"])
+
+    def test_concat_copy_mp3_with_chapters(self):
+        mp3s = []
+        for name in ("001", "002"):
+            make_audio(self.tmp / f"{name}.m4a")
+            assemble.to_mp3(self.tmp / f"{name}.m4a", self.tmp / f"{name}.mp3")
+            mp3s.append(self.tmp / f"{name}.mp3")
+        out = self.tmp / "pl.mp3"
+        assemble.concat_copy(mp3s, ["A", "B"], [1.0, 1.0], out)
+        self.assertAlmostEqual(assemble.probe(out).duration, 2.0, delta=0.15)
+        self.assertEqual(chapter_titles(out), ["A", "B"])
+
+    def test_normalize_makes_different_videos_concatenable(self):
+        make_clip(self.tmp / "a.mp4")
+        make_clip(self.tmp / "b.mp4", width=160, height=120, fps=25, vcodec="mpeg4")
+        outs = []
+        for name in ("a", "b"):
+            src = self.tmp / f"{name}.mp4"
+            out = self.tmp / f"{name}.norm.mp4"
+            assemble.normalize(src, assemble.probe(src), 180, out)
+            outs.append(assemble.probe(out))
+        for media in outs:
+            self.assertEqual(media.video, ("h264", 320, 180, "30/1"))
+            self.assertEqual(media.audio, ("aac", "48000", 2))
+        self.assertTrue(assemble.compatible(outs))
+
+    def test_normalize_adds_silence_when_audio_is_missing(self):
+        make_clip(self.tmp / "muet.mp4", audio=False)
+        src, out = self.tmp / "muet.mp4", self.tmp / "muet.norm.mp4"
+        assemble.normalize(src, assemble.probe(src), 180, out)
+        media = assemble.probe(out)
+        self.assertEqual(media.audio, ("aac", "48000", 2))
+        self.assertAlmostEqual(media.duration, 1.0, delta=0.15)
+
+    def test_run_failure_keeps_ffmpeg_message(self):
+        with self.assertRaises(JobError) as ctx:
+            assemble.run(["-i", str(self.tmp / "absent.mp4"), str(self.tmp / "x.mp4")])
+        self.assertEqual(ctx.exception.message, "Échec de la conversion")
+        # Spec §10 : la dernière ligne de ffmpeg (ffmpeg 8 y met la cause, pas le nom du fichier).
+        self.assertIn("No such file or directory", ctx.exception.details)
+
+    def test_run_cancel_kills_ffmpeg(self):
+        cancel = threading.Event()
+        threading.Timer(0.3, cancel.set).start()
+        started = time.monotonic()
+        with self.assertRaises(Cancelled):
+            assemble.run(["-re", "-f", "lavfi", "-i", "testsrc2=duration=60", "-f", "null", "-"], cancel)
+        self.assertLess(time.monotonic() - started, 3)
 
 
 if __name__ == "__main__":
