@@ -1,0 +1,11 @@
+.git
+.github
+.venv
+.DS_Store
+**/__pycache__
+deploy
+docs
+tests
+README.md
+Dockerfile
+.dockerignore
