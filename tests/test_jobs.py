@@ -169,6 +169,22 @@ class JobManagerTest(unittest.TestCase):
         with zipfile.ZipFile(self.job_dir(job) / "Ma playlist.zip") as z:
             self.assertEqual(z.namelist(), ["01 - Titre 1.mp4", "02 - Titre 3.mp4"])
 
+    def test_playlist_skips_any_failing_video_except_cookies_and_disk(self):
+        broken = "https://www.youtube.com/watch?v=v2"
+        m = self.start(FakeDownloader(playlists={PL: demo_playlist(3)},
+                                      errors={broken: JobError("other", details="HTTP Error 403: Forbidden")}))
+        done = self.until(m, m.submit(PL, "mp4", None, "zip")["id"], "ready")
+        self.assertEqual(done["skipped"], ["Titre 2"])
+
+    def test_playlist_stops_on_a_cookie_error(self):
+        broken = "https://www.youtube.com/watch?v=v2"
+        m = self.start(FakeDownloader(playlists={PL: demo_playlist(3)},
+                                      errors={broken: JobError("cookies", details="Sign in to confirm you're not a bot")}))
+        job = m.submit(PL, "mp4", None, "zip")
+        failed = self.until(m, job["id"], "error")
+        self.assertEqual(failed["error"]["kind"], "cookies")
+        self.assertFalse(self.job_dir(job).exists())
+
     def test_playlist_mode_defaults_to_zip(self):
         m = self.start(FakeDownloader(playlists={PL: demo_playlist(2)}))
         done = self.until(m, m.submit(PL, "mp4", None, None)["id"], "ready")

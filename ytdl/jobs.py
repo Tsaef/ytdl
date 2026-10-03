@@ -249,7 +249,9 @@ class JobManager:
                 items.append(self._dl.fetch(entry["url"], job.format, job.height, dl_dir / f"{index:03d}",
                                             cookiefile, job.id, self._progress(job, index, count), job.cancel))
             except JobError as e:
-                if e.kind not in ("unavailable", "live"):
+                # Cookies ou disque : les vidéos suivantes échoueraient aussi, on arrête.
+                # Tout le reste (403, format absent, DRM…) ne touche que cette vidéo.
+                if e.kind in ("cookies", "disk"):
                     raise
                 skipped.append(entry["title"])
                 self._update(job, skipped=list(skipped))
