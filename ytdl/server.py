@@ -105,6 +105,11 @@ def make_handler(manager: JobManager, cookies: CookieStore, guard: DiskGuard):
             match = JOB_PATH.match(path)
             try:
                 body = read_json(self.rfile, self.headers.get("Content-Length"))
+                # Anti-CSRF : un formulaire d'un autre site ne peut pas envoyer
+                # application/json, et fetch() déclencherait un preflight jamais accepté.
+                content_type = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+                if content_type != "application/json":
+                    return self._error(415, "bad_request", "Content-Type application/json attendu")
                 if path == "/api/analyze":
                     return self._send(200, manager.analyze(parse_url(body.get("url"))))
                 if path == "/api/jobs":

@@ -39,8 +39,8 @@ class ServerTest(unittest.TestCase):
         self.addCleanup(self.server.shutdown)
         self.base = f"http://127.0.0.1:{self.server.server_address[1]}"
 
-    def raw(self, method, path, data=None):
-        headers = {"Content-Type": "application/json"} if data is not None else {}
+    def raw(self, method, path, data=None, content_type="application/json"):
+        headers = {"Content-Type": content_type} if data is not None else {}
         request = urllib.request.Request(self.base + path, data=data, method=method, headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=5) as response:
@@ -114,6 +114,18 @@ class ServerTest(unittest.TestCase):
             with self.subTest(data=data):
                 self.assertEqual(self.call("POST", "/api/jobs", data=data)[0], 400)
         self.assertEqual(self.call("POST", "/api/analyze", {"url": "file:///etc/passwd"})[0], 400)
+
+    def test_cross_site_form_posts_are_refused(self):
+        # Un formulaire d'un autre site peut poster du JSON en text/plain, avec les
+        # identifiants basic_auth du navigateur : seul application/json est accepté.
+        body = b'{"url":"https://www.youtube.com/watch?v=X","format":"mp4","p":"="}\r\n'
+        for content_type in ("text/plain", "application/x-www-form-urlencoded", "multipart/form-data; boundary=x"):
+            with self.subTest(content_type=content_type):
+                status, _, payload = self.raw("POST", "/api/jobs", body, content_type)
+                self.assertEqual(status, 415)
+                self.assertEqual(json.loads(payload)["error"]["kind"], "bad_request")
+        self.assertEqual(self.call("GET", "/api/jobs")[1], [])
+        self.assertEqual(self.raw("POST", "/api/jobs", body, "application/json; charset=utf-8")[0], 201)
 
     def test_decisions(self):
         job = self.ready_job()
