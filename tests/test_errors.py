@@ -5,7 +5,10 @@ from ytdl.errors import JobError, classify, disk_error, last_line
 
 CASES = [
     ("ERROR: [youtube] jNQXAC9IVRw: Sign in to confirm you’re not a bot. Use --cookies-from-browser or --cookies for the authentication.", "cookies"),
-    ("ERROR: [youtube] abc: Sign in to confirm your age. This video may be inappropriate for some users.", "cookies"),
+    # Vidéo réservée aux adultes : renouveler les cookies n'y change rien (compte non vérifié).
+    ("ERROR: [youtube] abc: Sign in to confirm your age. This video may be inappropriate for some users.", "unavailable"),
+    ("ERROR: [youtube] abc: This video is age-restricted and only available on YouTube.", "unavailable"),
+    ("ERROR: [youtube] abc: Sign in to confirm you're not a bot. Use --cookies for the authentication.", "cookies"),
     ("ERROR: [youtube] abc: The provided YouTube account cookies are no longer valid.", "cookies"),
     ("ERROR: [youtube] abc: Video unavailable", "unavailable"),
     ("ERROR: [youtube] abc: Private video. Sign in if you've been granted access to this video. Use --cookies-from-browser or --cookies for the authentication.", "unavailable"),

@@ -14,8 +14,12 @@ MESSAGES = {
 # L'ordre compte : « Private video. Sign in if you've been granted access… » doit
 # rester une vidéo indisponible, pas un problème de cookies.
 _PATTERNS = (
-    ("unavailable", ("video unavailable", "private video", "in your country", "members-only", "has been removed")),
-    ("cookies", ("sign in to confirm", "cookies are no longer valid")),
+    # Âge : le compte secondaire n'est pas vérifié, renouveler les cookies n'y changerait rien.
+    ("unavailable", ("video unavailable", "private video", "in your country", "members-only", "has been removed",
+                     "confirm your age", "age-restricted", "inappropriate for some users")),
+    # « not a bot » plutôt que « sign in to confirm » (qui attrape aussi l'âge) ; sans
+    # l'apostrophe, qui peut être typographique.
+    ("cookies", ("not a bot", "cookies are no longer valid")),
     ("unsupported", ("unsupported url", "no suitable extractor")),
     ("live", ("live event will begin", "premieres in")),
     ("network", ("timed out", "connection refused", "connection reset", "name resolution", "http error 5", "network is unreachable")),
