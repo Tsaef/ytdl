@@ -1,2 +1,39 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><title>ytdl</title></head><body></body></html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ytdl</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="banner" class="banner" hidden></div>
+  <main>
+    <h1>ytdl</h1>
+    <form id="analyze">
+      <input id="url" type="url" inputmode="url" placeholder="Coller un lien…" required autocomplete="off">
+      <button type="submit">Analyser</button>
+    </form>
+    <p id="form-error" class="error" hidden></p>
+    <form id="options" hidden>
+      <div id="summary" class="summary"></div>
+      <fieldset>
+        <legend>Format</legend>
+        <label><input type="radio" name="format" value="mp4" checked> Vidéo MP4</label>
+        <label><input type="radio" name="format" value="mp3"> Audio MP3<span id="mp3-size"></span></label>
+      </fieldset>
+      <label id="quality-row">Qualité <select id="height"></select></label>
+      <fieldset id="mode-row" hidden>
+        <legend>Playlist</legend>
+        <label><input type="radio" name="mode" value="zip" checked> ZIP, un fichier par vidéo</label>
+        <label><input type="radio" name="mode" value="concat"> Un seul fichier, tout bout à bout (chapitres)</label>
+      </fieldset>
+      <div class="actions"><button type="submit">Télécharger</button></div>
+    </form>
+    <h2>Tâches</h2>
+    <p id="empty" class="muted">Aucune tâche.</p>
+    <ul id="jobs" class="jobs"></ul>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
