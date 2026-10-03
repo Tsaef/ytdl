@@ -1,0 +1,29 @@
+  # ---------------------------------------------------------------------
+  # ytdl - interface web personnelle pour yt-dlp (github.com/Tsaef/ytdl).
+  # Pas de "ports:" : Caddy seul y accede, derriere un mot de passe.
+  # ytdl-data : cookies.txt (compte YouTube secondaire) et fichiers
+  # temporaires ; Caddy sert jobs/ en lecture seule sous /files.
+  # cpus: 2 laisse des coeurs a Minecraft pendant les conversions ffmpeg.
+  # ---------------------------------------------------------------------
+  ytdl:
+    build:
+      context: ./apps/ytdl
+    image: ytdl:local
+    container_name: ytdl
+    restart: unless-stopped
+    environment:
+      YTDL_WORKERS: "2"
+    volumes:
+      - ./apps/ytdl-data:/data
+    networks: [web]
+    logging: *default-logging
+    mem_limit: 768m
+    cpus: 2
+    init: true
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/status', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+

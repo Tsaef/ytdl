@@ -1,0 +1,48 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - run: sudo apt-get update -q && sudo apt-get install -yq ffmpeg
+      # Stdlib seulement : yt-dlp n'est importé qu'en production.
+      - run: python -m unittest discover -s tests -t .
+        env:
+          YTDL_REQUIRE_FFMPEG: "1"
+      # La même image que sur le VPS.
+      - run: docker build .
+
+  # L'environnement "production" exige une validation manuelle avant ce job.
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://yt.tsaef.fr
+    steps:
+      - uses: actions/checkout@v7
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "tsaef.fr ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFV9a+JbrZi6tKjXobVABebJe9qyNymiQZArX/mRGOmU" > ~/.ssh/known_hosts
+      # La clé est bridée côté serveur (deploy-gate.sh) : rsync dans ~/stack/apps/ytdl
+      # et reconstruction du seul service ytdl. Les données (ytdl-data) sont ailleurs.
+      - name: Sync
+        run: rsync -az --delete Dockerfile .dockerignore requirements.txt ytdl web "ubuntu@tsaef.fr:"
+      - name: Rebuild
+        run: ssh ubuntu@tsaef.fr rebuild

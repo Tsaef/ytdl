@@ -1,0 +1,7 @@
+# YouTube casse régulièrement yt-dlp : une PR par semaine avec la dernière version.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly

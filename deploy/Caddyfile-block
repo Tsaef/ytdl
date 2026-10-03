@@ -1,0 +1,21 @@
+
+# ---------------------------------------------------------------------------
+# ytdl - interface yt-dlp personnelle (github.com/Tsaef/ytdl).
+# Mot de passe : YT_USER / YT_HASH dans caddy/auth.env.
+# /files/* : fichiers termines servis ici, avec reprise (Range) ; jobs/ est
+# monte en lecture seule sur /ytdl-jobs. Le reste part au conteneur.
+# ---------------------------------------------------------------------------
+yt.{$DOMAIN} {
+	import common
+	basic_auth {
+		{$YT_USER} {$YT_HASH}
+	}
+	handle_path /files/* {
+		root * /ytdl-jobs
+		header Content-Disposition attachment
+		file_server
+	}
+	handle {
+		reverse_proxy ytdl:8000
+	}
+}
