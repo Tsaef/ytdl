@@ -1,20 +1,13 @@
-/* Néomorphisme : tout est taillé dans la même matière grise, en relief (lumière en
-   haut à gauche, ombre en bas à droite) ou en creux ; le bleu marque l'actif. */
+/* Design suisse : grotesque, alignement à gauche, grille à deux colonnes, filets
+   noirs, aucun relief ni arrondi, une seule couleur d'accent. */
 :root {
   color-scheme: light;
-  --bg: #e4e7eb;
-  --light: #ffffff;
-  --dark: #c2c8d0;
-  --text: #4a4f57;
-  --muted: #8b919a;
-  --accent: #5a8fca;
-  --accent-hover: #6a9bd3;
-  --error: #c2504a;
-  --raised: 9px 9px 18px var(--dark), -9px -9px 18px var(--light);
-  --raised-sm: 5px 5px 10px var(--dark), -5px -5px 10px var(--light);
-  --inset: inset 5px 5px 10px var(--dark), inset -5px -5px 10px var(--light);
-  --inset-sm: inset 3px 3px 6px var(--dark), inset -3px -3px 6px var(--light);
-  --pressed: inset 3px 3px 7px rgba(0, 0, 0, 0.22);
+  --paper: #f5f4f0;
+  --ink: #111111;
+  --grey: #6b6b6b;
+  --rule: #d6d4ce;
+  --red: #e2001a;
+  --label-col: 8.5rem;
 }
 
 * { box-sizing: border-box; }
@@ -23,170 +16,198 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
-  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
-main { max-width: 640px; margin: 0 auto; padding: 20px 18px 40px; }
-h1 { font-size: 1.6rem; font-weight: 700; margin: 8px 0 22px; letter-spacing: 0.02em; }
-h2 { font-size: 1.1rem; margin: 34px 0 4px; }
+main { max-width: 720px; margin: 0 auto; padding: 24px 18px 56px; }
 
+/* Le titre fait l'affiche : énorme, serré, avec un point rouge. */
+h1 {
+  margin: 8px 0 28px;
+  font-size: clamp(4rem, 22vw, 8.5rem);
+  font-weight: 700;
+  line-height: 0.85;
+  letter-spacing: -0.055em;
+}
+h1::after { content: "."; color: var(--red); }
+
+/* Petites capitales espacées pour tous les intitulés. */
+h2, legend, #quality-row {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+h2 { margin: 48px 0 0; padding-top: 10px; border-top: 3px solid var(--ink); }
+
+/* Bandeau : aplat rouge, texte aligné sur la colonne de contenu. */
 .banner {
-  position: relative;
-  z-index: 1;
-  padding: 12px 16px;
-  text-align: center;
-  font-weight: 600;
-  color: var(--error);
-  background: var(--bg);
-  box-shadow: 0 6px 14px var(--dark);
+  padding: 10px max(18px, calc((100% - 720px) / 2 + 18px));
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--red);
 }
 
-/* ---- Relief et creux ------------------------------------------------ */
-#options, .job {
-  margin-top: 24px;
-  padding: 20px;
-  background: var(--bg);
-  border-radius: 26px;
-  box-shadow: var(--raised);
-}
-.job.cancelled { opacity: 0.65; }
+/* ---- Saisie --------------------------------------------------------- */
+#analyze { display: flex; gap: 16px; align-items: flex-end; }
 
-#analyze { display: flex; gap: 14px; align-items: center; }
-
-/* Champ en creux. 16 px minimum : en dessous, iOS zoome sur le champ. */
+/* 16 px minimum : en dessous, iOS zoome sur le champ. */
 input[type="url"] {
   flex: 1;
   min-width: 0;
-  padding: 14px 20px;
-  font-size: 16px;
-  color: var(--text);
-  background: var(--bg);
+  padding: 10px 0;
+  font: inherit;
+  font-size: 1.25rem;
+  color: var(--ink);
+  background: transparent;
   border: 0;
-  border-radius: 999px;
-  box-shadow: var(--inset);
+  border-bottom: 3px solid var(--ink);
+  border-radius: 0;
   outline: none;
 }
-input[type="url"]::placeholder { color: var(--muted); }
-input[type="url"]:focus { box-shadow: var(--inset), 0 0 0 2px var(--accent); }
+input[type="url"]::placeholder { color: var(--grey); }
+input[type="url"]:focus { border-bottom-color: var(--red); }
 
-/* Bouton principal : la pilule bleue en relief. */
 button, .button {
   display: inline-block;
-  padding: 12px 22px;
-  font-size: 16px;
-  font-weight: 600;
+  padding: 12px 20px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: #fff;
   text-decoration: none;
-  background: var(--accent);
-  border: 0;
-  border-radius: 999px;
-  box-shadow: var(--raised-sm);
-  cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
-}
-button:hover, .button:hover { background: var(--accent-hover); }
-button:active, .button:active { box-shadow: var(--pressed); }
-button:disabled { opacity: 0.6; cursor: default; }
-button:focus-visible, .button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-/* Bouton secondaire : même matière que le fond, qui s'enfonce au clic. */
-button.secondary {
-  font-weight: 500;
-  color: var(--text);
-  background: var(--bg);
-}
-button.secondary:hover { color: var(--accent); }
-button.secondary:active { box-shadow: var(--inset-sm); }
-
-/* ---- Choix ---------------------------------------------------------- */
-fieldset { border: 0; padding: 0; margin: 18px 0; min-width: 0; }
-legend { padding: 0; margin-bottom: 10px; font-weight: 600; }
-
-/* Sélecteur segmenté : une gouttière en creux, l'option choisie en relief bleu. */
-.segmented {
-  display: flex;
-  gap: 6px;
-  padding: 6px;
-  border-radius: 22px;
-  box-shadow: var(--inset);
-}
-.segmented label {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 12px;
-  text-align: center;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--muted);
-  border-radius: 17px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
-}
-.segmented label:hover { color: var(--text); }
-/* Bouton radio retiré de l'affichage mais toujours au clavier et au lecteur d'écran. */
-.segmented input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.segmented label:has(input:checked) { color: #fff; background: var(--accent); box-shadow: var(--raised-sm); }
-.segmented label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-#quality-row { display: flex; align-items: center; gap: 12px; font-weight: 600; margin: 18px 0 6px; }
-select {
-  -webkit-appearance: none;
-  appearance: none;
-  padding: 10px 42px 10px 18px;
-  font-size: 16px;
-  color: var(--text);
-  background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%234a4f57' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center / 14px;
-  border: 0;
-  border-radius: 999px;
-  box-shadow: var(--raised-sm);
+  background: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 0;
   cursor: pointer;
 }
-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+button:hover, .button:hover { background: var(--red); border-color: var(--red); }
+button:disabled { opacity: 0.5; cursor: default; }
+button:focus-visible, .button:focus-visible, select:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+button.secondary { color: var(--ink); background: transparent; }
+button.secondary:hover { color: #fff; }
 
-/* ---- Contenu -------------------------------------------------------- */
-.summary img { display: block; width: 100%; border-radius: 18px; box-shadow: var(--raised-sm); margin-bottom: 12px; }
+/* ---- Options : grille libellé | contenu ----------------------------- */
+#options { margin-top: 36px; padding-top: 14px; border-top: 3px solid var(--ink); }
+
+.summary img { display: block; width: 100%; margin: 6px 0 12px; }
+.title { margin: 4px 0; font-size: 1.15rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
 .entries {
   max-height: 200px;
   overflow: auto;
-  margin: 10px 0 0;
-  padding: 12px 14px 12px 2.2em;
-  color: var(--muted);
-  border-radius: 18px;
-  box-shadow: var(--inset-sm);
-}
-.title { font-weight: 600; margin: 4px 0; overflow-wrap: anywhere; }
-.muted { color: var(--muted); margin: 4px 0; font-size: 0.92rem; }
-/* p.error et pas .error : « error » est aussi la classe d'état d'une carte de tâche. */
-p.error { color: var(--error); font-weight: 500; }
-.jobs { list-style: none; padding: 0; margin: 0; }
-.actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
-summary { cursor: pointer; color: var(--muted); }
-pre {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font-size: 0.85rem;
-  padding: 12px;
-  border-radius: 14px;
-  box-shadow: var(--inset-sm);
+  margin: 12px 0 0;
+  padding: 0 0 0 2.2em;
+  font-variant-numeric: tabular-nums;
+  color: var(--grey);
 }
 
-/* Barre de progression : gouttière en creux, remplissage bleu. */
+/* Le float sort la légende de son rendu spécial : elle devient une case de la grille. */
+fieldset, #quality-row {
+  display: grid;
+  grid-template-columns: var(--label-col) 1fr;
+  gap: 8px 16px;
+  align-items: center;
+  margin: 0;
+  padding: 16px 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  min-width: 0;
+}
+legend { float: left; padding: 0; }
+
+/* Choix segmenté : des cases d'un tableau, la case choisie en aplat noir. */
+.segmented { display: flex; border: 2px solid var(--ink); }
+.segmented label {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  cursor: pointer;
+}
+.segmented label + label { border-left: 2px solid var(--ink); }
+.segmented label:hover { color: var(--red); }
+/* Bouton radio retiré de l'affichage mais toujours au clavier et au lecteur d'écran. */
+.segmented input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.segmented label:has(input:checked) { color: #fff; background: var(--ink); }
+.segmented label:has(input:focus-visible) { outline: 2px solid var(--red); outline-offset: -6px; }
+
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  justify-self: start;
+  min-width: 12rem;
+  padding: 8px 32px 8px 0;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%23111' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 4px center / 12px;
+  border: 0;
+  border-bottom: 2px solid var(--ink);
+  border-radius: 0;
+  cursor: pointer;
+}
+#quality-row { text-transform: uppercase; }
+#quality-row select { text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+/* ---- Tâches : lignes numérotées séparées par des filets -------------- */
+.jobs { list-style: none; padding: 0; margin: 0; counter-reset: job; }
+.job {
+  position: relative;
+  counter-increment: job;
+  padding: 18px 0 20px 3.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+.job::before {
+  content: counter(job, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 16px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.job.ready::before, .job.error::before { color: var(--red); }
+.job.cancelled { color: var(--grey); }
+
+.muted { margin: 4px 0; font-size: 0.9rem; color: var(--grey); }
+/* p.error et pas .error : « error » est aussi la classe d'état d'une carte de tâche. */
+p.error { color: var(--red); font-weight: 700; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+summary { cursor: pointer; font-size: 0.85rem; color: var(--grey); }
+pre {
+  margin: 8px 0 0;
+  padding: 10px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+  border-top: 1px solid var(--rule);
+}
+
 progress {
   -webkit-appearance: none;
   appearance: none;
   display: block;
   width: 100%;
-  height: 14px;
+  height: 6px;
   margin: 12px 0 6px;
-  padding: 3px;
   border: 0;
-  border-radius: 999px;
-  background: var(--bg);
-  box-shadow: var(--inset-sm);
+  border-radius: 0;
+  background: var(--rule);
 }
-progress::-webkit-progress-bar { background: transparent; border-radius: 999px; }
-progress::-webkit-progress-value { background: var(--accent); border-radius: 999px; }
-progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
+progress::-webkit-progress-bar { background: var(--rule); }
+progress::-webkit-progress-value { background: var(--red); }
+progress::-moz-progress-bar { background: var(--red); }
+
+/* Téléphone : la grille passe sur une colonne. */
+@media (max-width: 520px) {
+  fieldset, #quality-row { grid-template-columns: 1fr; }
+  select { min-width: 0; width: 100%; }
+}
