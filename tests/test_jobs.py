@@ -19,6 +19,27 @@ VIDEO = "https://www.youtube.com/watch?v=abc"
 PL = "https://www.youtube.com/playlist?list=PL1"
 
 
+class GatedAssembler(FakeAssembler):
+    """Bloque probe et to_mp3 jusqu'à ce que le test lève gate : une annulation peut tomber là."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.gate = threading.Event()
+        self.entered = threading.Event()
+
+    def _hold(self):
+        self.entered.set()
+        self.gate.wait(5)
+
+    def probe(self, path):
+        self._hold()
+        return super().probe(path)
+
+    def to_mp3(self, src, out, cancel=None):
+        self._hold()
+        super().to_mp3(src, out, cancel)
+
+
 class JobManagerTest(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
@@ -121,6 +142,27 @@ class JobManagerTest(unittest.TestCase):
             if j is not queued:
                 self.until(m, j["id"], "ready")
         self.assertEqual(m.get(queued["id"])["state"], "cancelled")
+
+    def test_cancel_during_conversion_wins_over_ready(self):
+        asm = GatedAssembler()
+        m = self.start(FakeDownloader(), asm)
+        job = m.submit(VIDEO, "mp3", None, None)
+        self.assertTrue(asm.entered.wait(5))
+        m.delete(job["id"])  # tombe pendant to_mp3, qui ne regarde pas cancel
+        asm.gate.set()
+        self.until(m, job["id"], "cancelled")
+        self.assertFalse(self.job_dir(job).exists())
+
+    def test_cancel_during_probe_never_leaves_a_stuck_job(self):
+        asm = GatedAssembler(compatible=False)
+        m = self.start(FakeDownloader(playlists={PL: demo_playlist(3)}), asm)
+        job = m.submit(PL, "mp4", None, "concat")
+        self.assertTrue(asm.entered.wait(5))
+        m.delete(job["id"])  # tombe pendant les ffprobe, avant la décision
+        asm.gate.set()
+        cancelled = self.until(m, job["id"], "cancelled")
+        self.assertIsNotNone(cancelled["expires_at"])  # le nettoyage l'emportera
+        self.assertFalse(self.job_dir(job).exists())
 
     def test_delete_a_finished_job(self):
         m = self.start(FakeDownloader())

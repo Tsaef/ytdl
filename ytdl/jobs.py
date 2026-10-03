@@ -234,9 +234,11 @@ class JobManager:
         height = self._asm.target_height(medias, job.height)
         estimate = self._asm.reencode_estimate(medias, height, self.settings.reencode_factor)
         now = self._clock()
-        self._update(job, state="awaiting_decision", pending=list(zip(items, medias)),
-                     decision={"reencode_estimate_s": estimate}, finished_at=now,
-                     expires_at=now + self.settings.ttl, progress={})
+        with self._lock:
+            self._raise_if_cancelled(job)
+            self._update(job, state="awaiting_decision", pending=list(zip(items, medias)),
+                         decision={"reencode_estimate_s": estimate}, finished_at=now,
+                         expires_at=now + self.settings.ttl, progress={})
 
     def _fetch_playlist(self, job: Job, playlist: Playlist, dl_dir: Path, cookiefile: Path | None) -> list[Item]:
         items, skipped = [], []
@@ -310,4 +312,13 @@ class JobManager:
     def _ready(self, job: Job, out: Path, note: str | None = None) -> None:
         shutil.rmtree(self._dir(job) / "dl", ignore_errors=True)
         file = {"name": out.name, "size": out.stat().st_size, "url": f"/files/{job.id}/{quote(out.name)}"}
-        self._finish(job, "ready", file=file, note=note, pending=[])
+        with self._lock:
+            self._raise_if_cancelled(job)
+            self._finish(job, "ready", file=file, note=note, pending=[])
+
+    def _raise_if_cancelled(self, job: Job) -> None:
+        # Appelée sous le verrou de delete() : une annulation arrivée pendant une étape
+        # qui ne la surveille pas (fusion yt-dlp, ffprobe…) gagne toujours, sinon la
+        # tâche finirait « prête » ou attendrait une décision sans jamais expirer.
+        if job.cancel.is_set():
+            raise Cancelled()
